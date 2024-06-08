@@ -8,13 +8,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { parseISO, isToday, addWeeks, addMonths, addYears, isWithinInterval, isYesterday, format } from "date-fns";
 import { Text } from 'react-native-elements'
 
-export default function Home({ navigation })
+export default function Home()
 {
     const [combinedData, setCombinedData] = useState([])
     const [loading, setLoading] = useState(true)
     const [currentMonthSpending, setCurrentMonthSpending] = useState(0);
 
-    // const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxNDYzYjA1MS01NTA2LTRlZDMtYmM5Yy0wODE4YzBkN2ViOTkiLCJuYmYiOjE3MTEwMzY2ODMsImV4cCI6MTcxMTA0MDI4MywiaWF0IjoxNzExMDM2NjgzLCJpc3MiOiJ0aGVfaXNzdWVyIiwiYXVkIjoidGhlX2F1ZGllbmNlIn0.0RZEBZENfEwtJzEkDNHQv7_REruSBT2pQ_dMLI0Nup4`
 
 
     useEffect(() =>

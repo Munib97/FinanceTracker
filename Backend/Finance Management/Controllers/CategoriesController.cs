@@ -12,7 +12,7 @@ namespace Finance_Management.Controllers
     public class CategoriesController : ControllerBase
     {
 
-        private readonly DataContext _dataContext;
+private readonly DataContext _dataContext;
         public CategoriesController(DataContext dataContext)
         {
             _dataContext = dataContext;   

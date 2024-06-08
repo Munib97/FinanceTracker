@@ -22,9 +22,9 @@ namespace Finance_Management.Controllers
 
         // GET: api/Subscriptions
         [HttpGet("user")]
-        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptionByUserId(IHttpContextAccessor httpContextAccessor)
+        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptionByUserId()
         {
-            var userId = _userManager.GetUserId(httpContextAccessor.HttpContext.User);
+            var userId = _userManager.GetUserId(HttpContext.User);
             return await _context.subscriptions.Where(i => i.UserId == userId).OrderByDescending(i => i.StartDate).ToListAsync();
         }
 
@@ -32,14 +32,24 @@ namespace Finance_Management.Controllers
         // PUT: api/Subscriptions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscriptions(int id, Subscription subscriptions)
+        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionDto subscriptionsDto)
         {
-            if (id != subscriptions.SubscriptionId)
+            var userId = _userManager.GetUserId(HttpContext.User);
+            if (id != subscriptionsDto.SubscriptionId)
             {
                 return BadRequest();
             }
-
-            _context.Entry(subscriptions).State = EntityState.Modified;
+            var existingSubscription = await _context.subscriptions.FindAsync(id);
+            if (existingSubscription != null)
+            {
+                existingSubscription.Frequency = subscriptionsDto.Frequency;
+                existingSubscription.StartDate = subscriptionsDto.StartDate;
+                existingSubscription.EndDate = subscriptionsDto.EndDate;   
+                existingSubscription.Name = subscriptionsDto.Name;
+                existingSubscription.Amount = subscriptionsDto.Amount;
+                existingSubscription.CategoryId = subscriptionsDto.CategoryId;
+            }
+            _context.Entry(existingSubscription).State = EntityState.Modified;
 
             try
             {

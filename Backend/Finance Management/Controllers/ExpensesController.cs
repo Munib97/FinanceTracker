@@ -51,12 +51,31 @@ namespace Finance_Management.Controllers
                 .Where(i => i.UserId == userId)
                 .Select(e => new ExpenseDto
                 {
-                    
                     ExpenseId = e.ExpenseId,
                     Name = e.Name,
                     Amount = e.Amount,
+                    DateSpent = e.DateSpent,
+                    CategoryId = e.CategoryId
                 })
                 .ToListAsync();
+            return expenses;
+        }
+        [HttpGet("Category{categoryId}")]
+        public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpensesByCategory(int categoryId)
+        {
+            var userId = _userManager.GetUserId(HttpContext.User);
+
+            var expenses = await _context.expenses
+                .Where(i => i.UserId == userId)
+                .Where(c => c.CategoryId == categoryId)
+                .Select(e => new ExpenseDto
+                {
+                    ExpenseId = e.ExpenseId,
+                    Name = e.Name,
+                    DateSpent = e.DateSpent,
+                    Amount = e.Amount,
+                    CategoryId = e.CategoryId
+                }).ToListAsync();
             return expenses;
         }
 
@@ -108,14 +127,29 @@ namespace Finance_Management.Controllers
         // PUT: api/expenses/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutExpense(int id, Expense expense)
+        public async Task<IActionResult> PutExpense(int id, ExpenseDto expenseDto)
         {
-            if (id != expense.ExpenseId)
+            var userId = _userManager.GetUserId(HttpContext.User);
+
+            if(userId == null)
             {
                 return BadRequest();
             }
+            var existingExpense = await _context.expenses.FindAsync(id);
+            if(existingExpense == null)
+            {
+                return NotFound();
+            }
+            if(existingExpense.UserId != userId)
+            {
+                return Forbid();
+            }
+            existingExpense.Name = expenseDto.Name;
+            existingExpense.Amount = expenseDto.Amount;
+            existingExpense.DateSpent = expenseDto.DateSpent;
+            existingExpense.CategoryId = expenseDto.CategoryId;
 
-            _context.Entry(expense).State = EntityState.Modified;
+            _context.Entry(existingExpense).State = EntityState.Modified;
 
             try
             {
@@ -161,6 +195,7 @@ namespace Finance_Management.Controllers
                 ExpenseId = expense.ExpenseId,
                 Amount = expense.Amount,
                 Name = expense.Name,
+                CategoryId = expense.CategoryId,
                 DateSpent = expense.DateSpent,
             };
             return CreatedAtAction("Getexpense", new { id = expense.ExpenseId }, expenseDtoResult);

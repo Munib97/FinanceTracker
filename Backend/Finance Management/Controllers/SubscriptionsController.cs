@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using Finance_Management.Data;
 using Finance_Management.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Finance_Management.Controllers
 {
@@ -13,14 +14,16 @@ namespace Finance_Management.Controllers
     public class SubscriptionsController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly UserManager<IdentityUser> _userManager;    
-        public SubscriptionsController(DataContext context, UserManager<IdentityUser> userManager)
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IMapper _mapper;
+
+        public SubscriptionsController(DataContext context, UserManager<IdentityUser> userManager, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
-        // GET: api/Subscriptions
         [HttpGet("user")]
         public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptionByUserId()
         {
@@ -28,26 +31,36 @@ namespace Finance_Management.Controllers
             return await _context.subscriptions.Where(i => i.UserId == userId).OrderByDescending(i => i.StartDate).ToListAsync();
         }
 
-
-        // PUT: api/Subscriptions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionDto subscriptionsDto)
+        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionUpdate subscriptionsDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            if (id != subscriptionsDto.SubscriptionId)
-            {
-                return BadRequest();
-            }
+
             var existingSubscription = await _context.subscriptions.FindAsync(id);
-            if (existingSubscription != null)
+            if (existingSubscription == null)
             {
-                existingSubscription.Frequency = subscriptionsDto.Frequency;
-                existingSubscription.StartDate = subscriptionsDto.StartDate;
-                existingSubscription.EndDate = subscriptionsDto.EndDate;   
-                existingSubscription.Name = subscriptionsDto.Name;
-                existingSubscription.Amount = subscriptionsDto.Amount;
-                existingSubscription.CategoryId = subscriptionsDto.CategoryId;
+                return NotFound();
+            }
+
+            if (subscriptionsDTO.Frequency != null)
+            {
+                existingSubscription.Frequency = (SubscriptionFrequency)subscriptionsDTO.Frequency;
+            }
+            if (subscriptionsDTO.StartDate != null)
+            {
+                existingSubscription.StartDate = (DateTime)subscriptionsDTO.StartDate;
+            }
+            if (subscriptionsDTO.EndDate != null)
+            {
+                existingSubscription.EndDate = (DateTime)subscriptionsDTO.EndDate;
+            }
+            if (subscriptionsDTO.Amount != null)
+            {
+                existingSubscription.Amount = (decimal)subscriptionsDTO.Amount;
+            }
+            if (subscriptionsDTO.Name != null)
+            {
+                existingSubscription.Name = subscriptionsDTO.Name;
             }
             _context.Entry(existingSubscription).State = EntityState.Modified;
 
@@ -66,47 +79,34 @@ namespace Finance_Management.Controllers
                     throw;
                 }
             }
+
             return NoContent();
         }
 
-        // POST: api/Subscriptions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<SubscriptionDto>> PostSubscriptions([FromBody] SubscriptionDto subscriptionsDto)
+        public async Task<ActionResult<SubscriptionCreate>> PostSubscriptions([FromBody] SubscriptionCreate subscriptionsDTO)
         {
             var UserId = _userManager.GetUserId(HttpContext.User);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             if (UserId == null)
             {
-                return BadRequest("User Not Found");
+                return BadRequest("User not found");
             }
-                var subscription = new Subscription
-                {
-                    Name = subscriptionsDto.Name,
-                    Frequency = subscriptionsDto.Frequency,
-                    StartDate = subscriptionsDto.StartDate,
-                    EndDate = subscriptionsDto.EndDate,
-                    Amount = subscriptionsDto.Amount,
 
-                    UserId = UserId,
-                    CategoryId = subscriptionsDto.CategoryId,
+            var subscription = _mapper.Map<Subscription>(subscriptionsDTO);
+            subscription.UserId = UserId;
+            _context.subscriptions.Add(subscription);
+            await _context.SaveChangesAsync();
 
-                };
-                _context.subscriptions.Add(subscription);
-                await _context.SaveChangesAsync();
-
-                var subscriptionDtoResult = new SubscriptionDto
-                {
-                    SubscriptionId = subscription.SubscriptionId,
-                    Amount = subscription.Amount,
-                    Name = subscription.Name,
-                    Frequency = subscription.Frequency,
-                    StartDate = subscription.StartDate,
-                    EndDate= subscription.EndDate,
-                };
+            var subscriptionDTOResult = _mapper.Map<SubscriptionCreate>(subscription);
 
 
-                return CreatedAtAction("PostSubscriptions", new { id = subscription.SubscriptionId }, subscriptionDtoResult);
-            
+            return CreatedAtAction("PostSubscriptions", new { id = subscription.SubscriptionId }, subscriptionDTOResult);
+
         }
 
         // DELETE: api/Subscriptions/5

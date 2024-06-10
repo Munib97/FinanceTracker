@@ -2,7 +2,9 @@ using Finance_Management.Data;
 using Finance_Management.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -46,7 +48,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<BalanceService>();
 builder.Services.AddScoped<SpendingsService>();
@@ -54,7 +56,7 @@ builder.Services.AddScoped<SubscriptionService>();
 
 builder.Services.AddAuthentication(options =>
 {
-
+    
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
@@ -87,7 +89,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-
+                                    
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

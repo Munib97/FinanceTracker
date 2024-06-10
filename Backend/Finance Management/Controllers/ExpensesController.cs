@@ -1,15 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using Finance_Management.Data;
 using Finance_Management.Models;
+using Finance_Management.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Finance_Management.Services;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Finance_Management.Controllers
 {
@@ -23,13 +19,16 @@ namespace Finance_Management.Controllers
         private readonly BalanceService _balanceService;
         private readonly SpendingsService _currentMonthSpendingService;
         private readonly IHttpContextAccessor _contextAccessor;
-        public ExpensesController(DataContext context, UserManager<IdentityUser> userManager, BalanceService balanceService, SpendingsService currentMonthSpendingService, IHttpContextAccessor httpContextAccessor)
+        private readonly IMapper _mapper;
+
+        public ExpensesController(DataContext context, UserManager<IdentityUser> userManager, BalanceService balanceService, SpendingsService currentMonthSpendingService, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
             _balanceService = balanceService;
             _currentMonthSpendingService = currentMonthSpendingService;
             _contextAccessor = httpContextAccessor;
+            _mapper = mapper;
         }
 
         // Moved to a new Controller
@@ -43,13 +42,13 @@ namespace Finance_Management.Controllers
 
         // GET: api/expenses
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ExpenseDto>>> Getexpenses()
+        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
         {
             var userId = _userManager.GetUserId(HttpContext.User);
 
             var expenses = await _context.expenses
                 .Where(i => i.UserId == userId)
-                .Select(e => new ExpenseDto
+                .Select(e => new Expense
                 {
                     ExpenseId = e.ExpenseId,
                     Name = e.Name,
@@ -61,14 +60,14 @@ namespace Finance_Management.Controllers
             return expenses;
         }
         [HttpGet("Category{categoryId}")]
-        public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpensesByCategory(int categoryId)
+        public async Task<ActionResult<IEnumerable<Expense>>> GetExpensesByCategory(int categoryId)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
 
             var expenses = await _context.expenses
                 .Where(i => i.UserId == userId)
                 .Where(c => c.CategoryId == categoryId)
-                .Select(e => new ExpenseDto
+                .Select(e => new Expense
                 {
                     ExpenseId = e.ExpenseId,
                     Name = e.Name,
@@ -106,7 +105,7 @@ namespace Finance_Management.Controllers
             var userId = _userManager.GetUserId(_contextAccessor.HttpContext.User);
             var expense = await _context.expenses.Where(e => e.UserId == userId).ToListAsync();
 
-            if(expense == null)
+            if (expense == null)
             {
                 return NotFound();
             }
@@ -117,7 +116,7 @@ namespace Finance_Management.Controllers
         public async Task<ActionResult<IEnumerable<Expense>>> GetExpenseByDate(DateTime date)
         {
             var expense = await _context.expenses.Where(e => e.DateSpent < date).ToListAsync();
-            if(expense == null)
+            if (expense == null)
             {
                 return NotFound();
             }
@@ -127,29 +126,47 @@ namespace Finance_Management.Controllers
         // PUT: api/expenses/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutExpense(int id, ExpenseDto expenseDto)
+        public async Task<IActionResult> PutExpense(int id, ExpenseUpdate expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-
-            if(userId == null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
-            var existingExpense = await _context.expenses.FindAsync(id);
-            if(existingExpense == null)
+
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var expense = await _context.expenses.FindAsync(id);
+            if (expense == null)
             {
                 return NotFound();
             }
-            if(existingExpense.UserId != userId)
+            if (expense.UserId != userId)
             {
                 return Forbid();
             }
-            existingExpense.Name = expenseDto.Name;
-            existingExpense.Amount = expenseDto.Amount;
-            existingExpense.DateSpent = expenseDto.DateSpent;
-            existingExpense.CategoryId = expenseDto.CategoryId;
 
-            _context.Entry(existingExpense).State = EntityState.Modified;
+            if (expenseDTO.Name != null)
+            {
+                expense.Name = expenseDTO.Name;
+            }
+            if (expenseDTO.Amount != null)
+            {
+                expense.Amount = (decimal)expenseDTO.Amount;
+            }
+            if (expenseDTO.CategoryId != null)
+            {
+                expense.CategoryId = (int)expenseDTO.CategoryId;
+            }
+            if (expenseDTO.DateSpent != null)
+            {
+                expense.DateSpent = (DateTime)expenseDTO.DateSpent;
+            }
+
+            _context.Entry(expense).State = EntityState.Modified;
 
             try
             {
@@ -171,34 +188,33 @@ namespace Finance_Management.Controllers
         // POST: api/expenses
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ExpenseDto>> PostExpense([FromBody]ExpenseDto expenseDto)
+        public async Task<ActionResult<ExpenseCreate>> PostExpense([FromBody] ExpenseCreate expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (userId == null)
             {
                 return BadRequest("User not found.");
             }
 
-            var expense = new Expense
-            {
-                Amount = expenseDto.Amount,
-                Name = expenseDto.Name,
-                DateSpent = expenseDto.DateSpent,
-                UserId = userId,
-                CategoryId = expenseDto.CategoryId,
-            };
+            var expense = _mapper.Map<Expense>(expenseDTO);
+
             _context.expenses.Add(expense);
             await _context.SaveChangesAsync();
 
-            var expenseDtoResult = new ExpenseDto
+            var expenseDtoResult = new ExpenseCreate
             {
-                ExpenseId = expense.ExpenseId,
                 Amount = expense.Amount,
                 Name = expense.Name,
                 CategoryId = expense.CategoryId,
                 DateSpent = expense.DateSpent,
             };
-            return CreatedAtAction("Getexpense", new { id = expense.ExpenseId }, expenseDtoResult);
+            return CreatedAtAction("GetExpense", new { id = expense.ExpenseId }, expenseDtoResult);
         }
 
         // DELETE: api/Expenses/5

@@ -32,7 +32,7 @@ namespace Finance_Management.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionUpdate subscriptionsDTO)
+        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionUpdateDTO subscriptionsDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
 
@@ -84,7 +84,7 @@ namespace Finance_Management.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<SubscriptionCreate>> PostSubscriptions([FromBody] SubscriptionCreate subscriptionsDTO)
+        public async Task<ActionResult<SubscriptionCreateDTO>> PostSubscriptions([FromBody] SubscriptionCreateDTO subscriptionsDTO)
         {
             var UserId = _userManager.GetUserId(HttpContext.User);
 
@@ -102,7 +102,7 @@ namespace Finance_Management.Controllers
             _context.subscriptions.Add(subscription);
             await _context.SaveChangesAsync();
 
-            var subscriptionDTOResult = _mapper.Map<SubscriptionCreate>(subscription);
+            var subscriptionDTOResult = _mapper.Map<SubscriptionCreateDTO>(subscription);
 
 
             return CreatedAtAction("PostSubscriptions", new { id = subscription.SubscriptionId }, subscriptionDTOResult);

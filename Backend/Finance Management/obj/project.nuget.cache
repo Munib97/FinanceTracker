@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "yTmBQizhHsVJNU0n1k7puhz2y/JX89imfYoKocIsq+MIwjoIKjEU4bvHsUSdygrreXmjq0ydL9VHoT9Ve8VMvw==",
+  "dgSpecHash": "9Yhs6NI+WoOsAGszSQKC6u/GcPbD2KridsrcVcxAVcB6gdsxc9HqRBoXxUaELR81/lt4ofukYHbkGgjee0z3Jg==",
   "success": true,
   "projectFilePath": "C:\\Users\\Munib\\Desktop\\FinanceTracker\\FinanceTracker\\Backend\\Finance Management\\Finance Management.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Munib\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\Munib\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\Munib\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
     "C:\\Users\\Munib\\.nuget\\packages\\humanizer\\2.14.1\\humanizer.2.14.1.nupkg.sha512",

@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Finance_Management.Data;
 using Finance_Management.Models;
-using Finance_Management.Repositories;
 using Finance_Management.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -21,9 +20,8 @@ namespace Finance_Management.Controllers
         private readonly SpendingsService _currentMonthSpendingService;
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IMapper _mapper;
-        private readonly IExpenseRepository _expenseRepository;
 
-        public ExpensesController(DataContext context, UserManager<IdentityUser> userManager, BalanceService balanceService, SpendingsService currentMonthSpendingService, IHttpContextAccessor httpContextAccessor, IMapper mapper, IExpenseRepository expenseRepository)
+        public ExpensesController(DataContext context, UserManager<IdentityUser> userManager, BalanceService balanceService, SpendingsService currentMonthSpendingService, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
@@ -31,7 +29,6 @@ namespace Finance_Management.Controllers
             _currentMonthSpendingService = currentMonthSpendingService;
             _contextAccessor = httpContextAccessor;
             _mapper = mapper;
-            _expenseRepository = expenseRepository;
         }
 
         // Moved to a new Controller
@@ -44,12 +41,24 @@ namespace Finance_Management.Controllers
         //}
 
         // GET: api/expenses
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
-        //{
-        //    var userId = _userManager.GetUserId(HttpContext.User);
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
+        {
+            var userId = _userManager.GetUserId(HttpContext.User);
 
-        //}
+            var expenses = await _context.expenses
+                .Where(i => i.UserId == userId)
+                .Select(e => new Expense
+                {
+                    ExpenseId = e.ExpenseId,
+                    Name = e.Name,
+                    Amount = e.Amount,
+                    DateSpent = e.DateSpent,
+                    CategoryId = e.CategoryId
+                })
+                .ToListAsync();
+            return expenses;
+        }
         [HttpGet("Category{categoryId}")]
         public async Task<ActionResult<IEnumerable<Expense>>> GetExpensesByCategory(int categoryId)
         {
@@ -76,8 +85,9 @@ namespace Finance_Management.Controllers
             return _balanceService.CalculateTotalBalance(userId);
         }
 
+        // GET: api/expenses/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Expense>> GetExpenseById(int id)
+        public async Task<ActionResult<Expense>> Getexpense(int id)
         {
             var expense = await _context.expenses.FindAsync(id);
 
@@ -90,11 +100,16 @@ namespace Finance_Management.Controllers
         }
 
         [HttpGet("user/")]
-        public async Task<ActionResult<Expense>> GetExpenseByUserId()
+        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenseByUserId()
         {
             var userId = _userManager.GetUserId(_contextAccessor.HttpContext.User);
-            var expenses = _mapper.Map<List<ExpenseGetDTO>>(_expenseRepository.GetExpenseByUserId(userId));
-            return Ok(expenses);
+            var expense = await _context.expenses.Where(e => e.UserId == userId).ToListAsync();
+
+            if (expense == null)
+            {
+                return NotFound();
+            }
+            return expense;
         }
 
         [HttpGet("date/{date}")]
@@ -111,7 +126,7 @@ namespace Finance_Management.Controllers
         // PUT: api/expenses/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutExpense(int id, ExpenseUpdateDTO expenseDTO)
+        public async Task<IActionResult> PutExpense(int id, ExpenseUpdate expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
             if (!ModelState.IsValid)
@@ -206,12 +221,14 @@ namespace Finance_Management.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExpense(int id)
         {
-
-            var expenseToDelete = _expenseRepository.GetExpenseById(id);
-            if (!_expenseRepository.DeleteExpense(expenseToDelete))
+            var expenses = await _context.expenses.FindAsync(id);
+            if (expenses == null)
             {
-                ModelState.AddModelError("", "Something went wrong");
+                return NotFound();
             }
+
+            _context.expenses.Remove(expenses);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 

@@ -2,7 +2,7 @@
 
 namespace Finance_Management.Data
 {
-    public record SubscriptionUpdateDTO
+    public record SubscriptionUpdate
      (
         int? SubscriptionId,
         string? Name,

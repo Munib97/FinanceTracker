@@ -8,10 +8,20 @@ namespace Finance_Management.Helper
     {
         public MappingProfiles()
         {
-            CreateMap<ExpenseCreate, Expense>().ReverseMap();
-            CreateMap<ExpenseUpdate, Expense>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            CreateMap<SubscriptionCreate, Subscription>().ReverseMap();
-            CreateMap<SubscriptionUpdate, Subscription>().ReverseMap();
+            CreateMap<ExpenseCreate, Expense>();
+            CreateMap<Expense, ExpenseCreate>();
+            CreateMap<ExpenseUpdateDTO, Expense>();
+            CreateMap<Expense, ExpenseUpdateDTO>();
+
+            CreateMap<ExpenseGetDTO, Expense>();
+            CreateMap<Expense, ExpenseGetDTO>();
+
+
+            CreateMap<SubscriptionCreateDTO, Subscription>();
+            CreateMap<SubscriptionUpdateDTO, Subscription>();
+            CreateMap<Subscription, SubscriptionCreateDTO>();
+            CreateMap<Subscription, SubscriptionUpdateDTO>();
+
         }
     }
 }

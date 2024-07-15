@@ -18,19 +18,29 @@ namespace Finance_Management.Repositories
             return Save();
         }
 
-        public bool ExpenseExists(int id)
+        public bool ExpenseExists(int id, string userId)
         {
             return _context.expenses.Where(e => e.ExpenseId == id).Any();
         }
 
-        public ICollection<Expense> GetExpenseByDate(DateTime date)
+        public ICollection<Expense> GetExpenseByDate(DateTime date, string userId)
         {
-            return _context.expenses.Where(e => e.DateSpent == date).ToList();
+            return _context.expenses.Where(e => e.DateSpent == date && e.UserId == userId).ToList();
         }
 
-        public Expense GetExpenseById(int id)
+        public Expense GetExpenseById(int id, string userId)
         {
-            return _context.expenses.Where(e => e.ExpenseId == id).FirstOrDefault();
+            var expense = _context.expenses.Find(id);
+            return expense;
+            //var query = _context.expenses
+            //                    .Where(i => i.UserId == userId && i.ExpenseId == id)
+            //                    .Select(e => new Expense
+            //                    {
+            //                        Name = e.Name,
+            //                        Amount = e.Amount,
+            //                        DateSpent = e.DateSpent,
+            //                    }).FirstOrDefault();
+            //return query;
         }
 
         public ICollection<Expense> GetExpenseByUserId(string userId)
@@ -43,26 +53,45 @@ namespace Finance_Management.Repositories
                     Name = e.Name,
                     Amount = e.Amount,
                     DateSpent = e.DateSpent,
-                    CategoryId = e.CategoryId
+                    CategoryId = e.CategoryId,
+
                 })
                 .ToList();
         }
 
 
-        public ICollection<Expense> GetExpensesByCategory(int categoryId)
+        public ICollection<Expense> GetExpensesByCategory(int categoryId, string userId)
         {
-            return _context.expenses.Where(e => categoryId == e.CategoryId).ToList();
+            return _context.expenses.Where(e => categoryId == e.CategoryId && e.UserId == userId).ToList();
         }
 
-        public bool PostExpense(ExpenseCreate expenseDTO)
+        public bool PostExpense(Expense expense, string userId)
         {
-            _context.Add(expenseDTO);
+            _context.Add(expense);
             return Save();
         }
 
         public bool PutExpense(int id, ExpenseUpdateDTO expenseDTO)
         {
-            _context.Update(expenseDTO);
+            var expense = _context.expenses.Find(id);
+
+            if (expenseDTO.Name != null)
+            {
+                expense.Name = expenseDTO.Name;
+            }
+            if (expenseDTO.Amount != null)
+            {
+                expense.Amount = (decimal)expenseDTO.Amount;
+            }
+            if (expenseDTO.CategoryId != null)
+            {
+                expense.CategoryId = (int)expenseDTO.CategoryId;
+            }
+            if (expenseDTO.DateSpent != null)
+            {
+                expense.DateSpent = (DateTime)expenseDTO.DateSpent;
+            }
+            _context.Update(expense);
             return Save();
         }
 

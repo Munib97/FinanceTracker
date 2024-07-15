@@ -5,15 +5,14 @@ namespace Finance_Management.Repositories
 {
     public interface IExpenseRepository
     {
-        ICollection<Expense> GetExpensesByCategory(int categoryId);
-        Expense GetExpenseById(int id);
+        ICollection<Expense> GetExpensesByCategory(int categoryId, string userId);
+        Expense GetExpenseById(int id, string userId);
         ICollection<Expense> GetExpenseByUserId(string userId);
-        public ICollection<Expense> GetExpenseByDate(DateTime date);
-        bool PutExpense(int id, ExpenseUpdateDTO expenseDTO);
-        bool PostExpense(ExpenseCreate expenseDTO);
+        public ICollection<Expense> GetExpenseByDate(DateTime date, string userId);
+        bool PutExpense(int id, ExpenseUpdateDTO expense);
+        bool PostExpense(Expense expense, string userId);
         bool DeleteExpense(Expense expense);
-        bool ExpenseExists(int id);
+        bool ExpenseExists(int id, string userId);
         bool Save();
     }
 }
-

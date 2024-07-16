@@ -164,7 +164,7 @@ namespace Finance_Management.Controllers
             //    DateSpent = expense.DateSpent,
             //};
             //return CreatedAtAction("GetExpense", new { id = expense.ExpenseId }, expenseDtoResult);
-            return Ok();
+            return Ok(expenseDTO);
         }
 
         // DELETE: api/Expenses/5

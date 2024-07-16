@@ -67,6 +67,7 @@ namespace Finance_Management.Repositories
 
         public bool PostExpense(Expense expense, string userId)
         {
+            expense.UserId = userId;
             _context.Add(expense);
             return Save();
         }

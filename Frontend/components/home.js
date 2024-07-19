@@ -5,7 +5,7 @@ import { FlatList, ScrollView } from "react-native-gesture-handler";
 import { ActivityIndicator } from "react-native";
 import { Text } from 'react-native-elements';
 import { PieChart } from 'react-native-chart-kit';
-import RNPickerSelect from 'react-native-picker-select'; // Import Picker
+import RNPickerSelect from 'react-native-picker-select';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { parseISO, isToday, isYesterday, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay } from "date-fns";
 
@@ -33,7 +33,7 @@ export default function Home()
             const token = await AsyncStorage.getItem('token');
             const startDate = getStartDate(range);
             const endDate = getEndDate(range);
-            console.log(`Fetching data from ${ startDate } to ${ endDate }`); // Debugging line
+            console.log(`Fetching data from ${ startDate } to ${ endDate }`);
             const response = await axios.get(`http://192.168.0.117:5295/api/CombinedSpendings`, {
                 params: {
                     startDate,
@@ -44,7 +44,7 @@ export default function Home()
                 }
             });
             const data = response.data;
-            console.log("Fetched data: ", data); // Debugging line
+            console.log("Fetched data: ", data);
             setCombinedData(data);
             calculateSpendingByCategory(data);
         } catch (error)
@@ -81,7 +81,7 @@ export default function Home()
 
         data.forEach(item =>
         {
-            const category = item.categoryName || 'Uncategorized'; // Handle undefined category
+            const category = item.categoryName || 'Uncategorized';
             if (categoryMap[category])
             {
                 categoryMap[category] += item.amount;
@@ -95,7 +95,7 @@ export default function Home()
         const spendingByCategory = Object.keys(categoryMap).map(category => ({
             category,
             amount: categoryMap[category],
-            percentage: ((categoryMap[category] / totalSpending) * 100).toFixed(2) // Calculate percentage
+            percentage: ((categoryMap[category] / totalSpending) * 100).toFixed(2)
         }));
 
         setSpendingByCategory(spendingByCategory);

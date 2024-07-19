@@ -1,7 +1,5 @@
 ﻿using Finance_Management.Data;
 using Finance_Management.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Finance_Management.Services

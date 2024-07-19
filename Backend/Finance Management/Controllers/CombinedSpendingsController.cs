@@ -1,11 +1,9 @@
 ﻿using Finance_Management.Data;
 using Finance_Management.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 
 namespace Finance_Management.Controllers
 {
@@ -39,19 +37,21 @@ namespace Finance_Management.Controllers
                     UserId = e.UserId,
                     Date = e.DateSpent,
                     Name = e.Name,
+                    CategoryName = e.Category.Name,
                     Type = "Expense"
                 }).ToListAsync();
             var subscriptions = await _context.subscriptions
                 .Where(s => s.UserId == userId)
-                .Select( s => new CombinedSpendingsDto
+                .Select(s => new CombinedSpendingsDto
                 {
                     Id = s.SubscriptionId,
                     Amount = s.Amount,
                     UserId = s.UserId,
                     Date = s.DueDate,
                     Name = s.Name,
+                    CategoryName = s.Category.Name,
                     Type = "Subscription"
-                    
+
                 }).ToListAsync();
             var combinedData = expenses.Concat(subscriptions).OrderBy(item => item.Date);
             return combinedData;

@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import Home from './components/home';
 import Dashboard from './components/Dashboard'
-import Expenses from './components/epxenses';
+import Expenses from './components/expenses';
 import Subscriptions from './components/subscriptions';
 import AddExpense from './components/addExpense';
 import AddSubscription from './components/addSubscription';
 import { AuthContext } from './authContext';
 import LoginScreen from './components/LoginScreen';
 import Register from './components/Register';
-
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Stack = createStackNavigator()
 
 export const AppNav = () =>
 {
     const { token } = useContext(AuthContext)
+    const { logout } = useContext(AuthContext)
+
     return (
         <NavigationContainer>
 
@@ -29,7 +31,17 @@ export const AppNav = () =>
             ) : (
                 <>
                     <Stack.Navigator>
-                        <Stack.Screen name='Dashboard' component={ Dashboard } />
+                        <Stack.Screen name='Expense Tracker' component={ Dashboard }
+                            options={ ({ navigation }) => ({
+                                headerRight: () => (
+                                    <Button
+                                        onPress={ logout }
+                                        title="Logout"
+                                        color="#00cc00"
+                                    />
+                                ),
+                            }) }
+                        />
                         <Stack.Screen name='Home' component={ Home } />
                         <Stack.Screen name='Expenses' component={ Expenses } />
                         <Stack.Screen name='Subscriptions' component={ Subscriptions } />
@@ -40,7 +52,6 @@ export const AppNav = () =>
                     </Stack.Navigator>
                 </>
             ) }
-
         </NavigationContainer>
     )
 }

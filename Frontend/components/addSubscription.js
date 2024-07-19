@@ -39,17 +39,17 @@ export default function AddSubscription()
     };
     useEffect(() =>
     {
-        getCategories();
-        const token = AsyncStorage.getItem('token');
 
-        setToken(token);
+        getCategories();
+
     }, []);
 
     const getCategories = async () =>
     {
         try
         {
-
+            const token = await AsyncStorage.getItem('token');
+            setToken(token)
             const response = await axios.get('http://192.168.0.117:5295/api/Categories', {
                 headers: {
                     Authorization: `Bearer ${ token }`
@@ -76,9 +76,9 @@ export default function AddSubscription()
                 endDate: endDate,
                 categoryId: selectedCategoryValue
             }, {
-                // headers: {
-                //     Authorization: `Bearer ${ token }`
-                // }
+                headers: {
+                    Authorization: `Bearer ${ token }`
+                }
             });
             Alert.alert('Success', 'Subscription created successfully');
         } catch (error)

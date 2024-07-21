@@ -1,7 +1,5 @@
 ﻿using Finance_Management.Data;
-using Finance_Management.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.CompilerServices;
 
 namespace Finance_Management.Services
 {
@@ -15,16 +13,12 @@ namespace Finance_Management.Services
             _subscriptionService = subscriptionService;
         }
 
-        
-        
-
-
         public async Task<decimal> CalculateCurrentMonthSubscriptions(string userId)
         {
             var subscriptions = await _context.subscriptions.Where(s => s.UserId == userId).ToListAsync();
             var dueSubscriptions = subscriptions.Where(s => s.DueDate <= DateTime.Today).ToList();
             decimal total = 0;
-            foreach(var subscription in dueSubscriptions)
+            foreach (var subscription in dueSubscriptions)
             {
                 total += subscription.Amount;
             }

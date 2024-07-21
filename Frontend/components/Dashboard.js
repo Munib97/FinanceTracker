@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import Test from "./test";
-import Test2 from "./test2";
 import Swiper from "react-native-screens-swiper";
 import { Platform } from "react-native";
 import { View, Text, Button } from "react-native";

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Finance_Management.Data
 {
-    public class SubscriptionCreate
+    public class SubscriptionCreateDTO
     {
         [Required]
         public string? Name { get; set; }

@@ -12,16 +12,16 @@ namespace Finance_Management.Controllers
     public class CategoriesController : ControllerBase
     {
 
-private readonly DataContext _dataContext;
+        private readonly DataContext _dataContext;
         public CategoriesController(DataContext dataContext)
         {
-            _dataContext = dataContext;   
+            _dataContext = dataContext;
         }
         [HttpGet]
         public Task<List<Category>> GetCategories()
         {
             var categories = _dataContext.categories.ToListAsync();
-            
+
             return categories;
         }
     }

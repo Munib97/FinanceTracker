@@ -141,9 +141,9 @@ export default function Home()
     };
 
     const renderItem = ({ item }) => (
-        <View style={ homeStyles.expenseItem }>
-            <Text style={ homeStyles.expenseDescription }>{ item.name }</Text>
-            <Text style={ homeStyles.expenseAmount }>€{ item.amount }</Text>
+        <View style={ styles.expenseItem }>
+            <Text style={ styles.expenseDescription }>{ item.name }</Text>
+            <Text style={ styles.expenseAmount }>€{ item.amount }</Text>
         </View>
     );
 

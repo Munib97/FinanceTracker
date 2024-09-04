@@ -1,14 +1,14 @@
-<<<<<<< HEAD
-import React, { useState, useEffect, useContext } from "react";
-import Swiper from "react-native-screens-swiper";
-import { Platform } from "react-native";
-import { View, Text, Button } from "react-native";
-import Expenses from "./epxenses";
-import Home from "./home";
-import Subscriptions from "./subscriptions";
-import { AuthContext } from "../authContext";
+// <<<<<<< HEAD
+// import React, { useState, useEffect, useContext } from "react";
+// import Swiper from "react-native-screens-swiper";
+// import { Platform } from "react-native";
+// import { View, Text, Button } from "react-native";
+// import Expenses from "./epxenses";
+// import Home from "./home";
+// import Subscriptions from "./subscriptions";
+// import { AuthContext } from "../authContext";
 
-=======
+// =======
 import React, { useState, useEffect, useRef } from 'react';
 import
 {
@@ -28,7 +28,7 @@ import SubscriptionsIcon from '../icons/SubscriptionsIcon.png';
 import Expenses from './expenses';
 import Home from './home';
 import Subscriptions from './subscriptions';
->>>>>>> eb29f75b4d41b6727178dcf965a112cc4c60b400
+//>>>>>>> eb29f75b4d41b6727178dcf965a112cc4c60b400
 
 const tabIcons = {
     E: ExpensesIcon,

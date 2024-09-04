@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Finance_Management.Data;
+﻿using Finance_Management.Data;
 using Finance_Management.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Finance_Management.Controllers
 {
@@ -25,33 +20,59 @@ namespace Finance_Management.Controllers
 
         // GET: api/Incomes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Income>>> Getincomes()
+        public async Task<ActionResult<IEnumerable<Income>>> GetIncomes()
         {
-            return await _context.incomes.ToListAsync();
+            try
+            {
+                var userId = User.Identity.Name;
+                var incomes = await _context.incomes
+                    .Where(i => i.UserId == userId)
+                    .ToListAsync();
+
+                if (incomes == null || !incomes.Any())
+                {
+                    return NotFound(new { Message = "No incomes found for the current user." });
+                }
+
+                return Ok(incomes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving incomes.", Details = ex.Message });
+            }
         }
 
         // GET: api/Incomes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Income>> GetIncome(int id)
         {
-            var income = await _context.incomes.FindAsync(id);
-
-            if (income == null)
+            try
             {
-                return NotFound();
-            }
+                var userId = User.Identity.Name;
+                var income = await _context.incomes
+                    .Where(i => i.UserId == userId && i.Id == id)
+                    .FirstOrDefaultAsync();
 
-            return income;
+                if (income == null)
+                {
+                    return NotFound(new { Message = "Income not found." });
+                }
+
+                return Ok(income);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving the income.", Details = ex.Message });
+            }
         }
 
         // PUT: api/Incomes/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutIncome(int id, Income income)
         {
             if (id != income.Id)
             {
-                return BadRequest();
+                return BadRequest(new { Message = "Income ID mismatch." });
             }
 
             _context.Entry(income).State = EntityState.Modified;
@@ -59,47 +80,69 @@ namespace Finance_Management.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
                 if (!IncomeExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new { Message = "Income not found." });
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, new { Message = "An error occurred while updating the income.", Details = ex.Message });
                 }
             }
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An unexpected error occurred.", Details = ex.Message });
+            }
         }
 
         // POST: api/Incomes
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Income>> PostIncome(Income income)
         {
-            _context.incomes.Add(income);
-            await _context.SaveChangesAsync();
+            try
+            {
+                income.UserId = User.Identity.Name; // Set the UserId to the current logged-in user
 
-            return CreatedAtAction("GetIncome", new { id = income.Id }, income);
+                _context.incomes.Add(income);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetIncome), new { id = income.Id }, income);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while creating the income.", Details = ex.Message });
+            }
         }
 
         // DELETE: api/Incomes/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteIncome(int id)
         {
-            var income = await _context.incomes.FindAsync(id);
-            if (income == null)
+            try
             {
-                return NotFound();
+                var userId = User.Identity.Name;
+                var income = await _context.incomes
+                    .Where(i => i.UserId == userId && i.Id == id)
+                    .FirstOrDefaultAsync();
+
+                if (income == null)
+                {
+                    return NotFound(new { Message = "Income not found." });
+                }
+
+                _context.incomes.Remove(income);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.incomes.Remove(income);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while deleting the income.", Details = ex.Message });
+            }
         }
 
         private bool IncomeExists(int id)

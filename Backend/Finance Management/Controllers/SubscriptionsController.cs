@@ -25,107 +25,146 @@ namespace Finance_Management.Controllers
         }
 
         [HttpGet("user")]
-        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptionByUserId()
+        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptionsByUserId()
         {
-            var userId = _userManager.GetUserId(HttpContext.User);
-            return await _context.subscriptions.Where(i => i.UserId == userId).OrderByDescending(i => i.StartDate).ToListAsync();
+            try
+            {
+                var userId = _userManager.GetUserId(HttpContext.User);
+                var subscriptions = await _context.subscriptions
+                    .Where(s => s.UserId == userId)
+                    .OrderByDescending(s => s.StartDate)
+                    .ToListAsync();
+
+                if (subscriptions == null || !subscriptions.Any())
+                {
+                    return NotFound(new { Message = "No subscriptions found for the current user." });
+                }
+
+                return Ok(subscriptions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving subscriptions.", Details = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscriptions(int id, SubscriptionUpdateDTO subscriptionsDTO)
+        public async Task<IActionResult> UpdateSubscription(int id, SubscriptionUpdateDTO subscriptionsDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
 
-            var existingSubscription = await _context.subscriptions.FindAsync(id);
-            if (existingSubscription == null)
-            {
-                return NotFound();
-            }
-
-            if (subscriptionsDTO.Frequency != null)
-            {
-                existingSubscription.Frequency = (SubscriptionFrequency)subscriptionsDTO.Frequency;
-            }
-            if (subscriptionsDTO.StartDate != null)
-            {
-                existingSubscription.StartDate = (DateTime)subscriptionsDTO.StartDate;
-            }
-            if (subscriptionsDTO.EndDate != null)
-            {
-                existingSubscription.EndDate = (DateTime)subscriptionsDTO.EndDate;
-            }
-            if (subscriptionsDTO.Amount != null)
-            {
-                existingSubscription.Amount = (decimal)subscriptionsDTO.Amount;
-            }
-            if (subscriptionsDTO.Name != null)
-            {
-                existingSubscription.Name = subscriptionsDTO.Name;
-            }
-            _context.Entry(existingSubscription).State = EntityState.Modified;
-
             try
             {
+                var existingSubscription = await _context.subscriptions.FindAsync(id);
+                if (existingSubscription == null || existingSubscription.UserId != userId)
+                {
+                    return NotFound(new { Message = "Subscription not found." });
+                }
+
+                // Apply changes only if new values are provided
+                if (subscriptionsDTO.Frequency.HasValue)
+                {
+                    existingSubscription.Frequency = subscriptionsDTO.Frequency.Value;
+                }
+                if (subscriptionsDTO.StartDate.HasValue)
+                {
+                    existingSubscription.StartDate = subscriptionsDTO.StartDate.Value;
+                }
+                if (subscriptionsDTO.EndDate.HasValue)
+                {
+                    existingSubscription.EndDate = subscriptionsDTO.EndDate.Value;
+                }
+                if (subscriptionsDTO.Amount.HasValue)
+                {
+                    existingSubscription.Amount = subscriptionsDTO.Amount.Value;
+                }
+                if (!string.IsNullOrWhiteSpace(subscriptionsDTO.Name))
+                {
+                    existingSubscription.Name = subscriptionsDTO.Name;
+                }
+
+                _context.Entry(existingSubscription).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
+
+                return NoContent();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SubscriptionsExists(id))
+                if (!SubscriptionExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new { Message = "Subscription not found." });
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, new { Message = "An error occurred while updating the subscription." });
                 }
             }
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An unexpected error occurred.", Details = ex.Message });
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<SubscriptionCreateDTO>> PostSubscriptions([FromBody] SubscriptionCreateDTO subscriptionsDTO)
+        public async Task<ActionResult<SubscriptionCreateDTO>> CreateSubscription([FromBody] SubscriptionCreateDTO subscriptionsDTO)
         {
-            var UserId = _userManager.GetUserId(HttpContext.User);
-
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                var userId = _userManager.GetUserId(HttpContext.User);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (userId == null)
+                {
+                    return BadRequest(new { Message = "User not found." });
+                }
+
+                var subscription = _mapper.Map<Subscription>(subscriptionsDTO);
+                subscription.UserId = userId;
+
+                await _context.subscriptions.AddAsync(subscription);
+                await _context.SaveChangesAsync();
+
+                var subscriptionDTOResult = _mapper.Map<SubscriptionCreateDTO>(subscription);
+
+                return CreatedAtAction(nameof(CreateSubscription), new { id = subscription.SubscriptionId }, subscriptionDTOResult);
             }
-            if (UserId == null)
+            catch (Exception ex)
             {
-                return BadRequest("User not found");
+                return StatusCode(500, new { Message = "An error occurred while creating the subscription.", Details = ex.Message });
             }
-
-            var subscription = _mapper.Map<Subscription>(subscriptionsDTO);
-            subscription.UserId = UserId;
-            _context.subscriptions.Add(subscription);
-            await _context.SaveChangesAsync();
-
-            var subscriptionDTOResult = _mapper.Map<SubscriptionCreateDTO>(subscription);
-
-
-            return CreatedAtAction("PostSubscriptions", new { id = subscription.SubscriptionId }, subscriptionDTOResult);
-
         }
 
-        // DELETE: api/Subscriptions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSubscriptions(int id)
+        public async Task<IActionResult> DeleteSubscription(int id)
         {
-            var subscriptions = await _context.subscriptions.FindAsync(id);
-            if (subscriptions == null)
+            try
             {
-                return NotFound();
+                var userId = _userManager.GetUserId(HttpContext.User);
+                var subscription = await _context.subscriptions
+                    .Where(s => s.SubscriptionId == id && s.UserId == userId)
+                    .FirstOrDefaultAsync();
+
+                if (subscription == null)
+                {
+                    return NotFound(new { Message = "Subscription not found." });
+                }
+
+                _context.subscriptions.Remove(subscription);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.subscriptions.Remove(subscriptions);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while deleting the subscription.", Details = ex.Message });
+            }
         }
 
-        private bool SubscriptionsExists(int id)
+        private bool SubscriptionExists(int id)
         {
             return _context.subscriptions.Any(e => e.SubscriptionId == id);
         }

@@ -14,7 +14,6 @@ namespace Finance_Management.Controllers
     [Authorize]
     public class ExpensesController : ControllerBase
     {
-        private readonly DataContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly BalanceService _balanceService;
         private readonly SpendingsService _currentMonthSpendingService;
@@ -22,167 +21,220 @@ namespace Finance_Management.Controllers
         private readonly IMapper _mapper;
         private readonly IExpenseRepository _expenseRepository;
 
-        public ExpensesController(UserManager<IdentityUser> userManager, BalanceService balanceService, SpendingsService currentMonthSpendingService, IHttpContextAccessor httpContextAccessor, IMapper mapper, IExpenseRepository expenseRepository)
+        public ExpensesController(
+            UserManager<IdentityUser> userManager,
+            BalanceService balanceService,
+            SpendingsService currentMonthSpendingService,
+            IHttpContextAccessor httpContextAccessor,
+            IMapper mapper,
+            IExpenseRepository expenseRepository)
         {
+            _userManager = userManager;
             _balanceService = balanceService;
             _currentMonthSpendingService = currentMonthSpendingService;
             _contextAccessor = httpContextAccessor;
             _mapper = mapper;
             _expenseRepository = expenseRepository;
-            _userManager = userManager;
         }
 
-        // Moved to a new Controller
-
-        //[HttpGet("currentMonthSpending/{userId}")]
-        //public async Task<decimal> GetCurrentMonthExpenses(string userId)
-        //{
-        //    var currentMonthSpending = await _currentMonthSpendingService.CalculateCurrentMonthSpending(userId);
-        //    return currentMonthSpending;
-        //}
-
-        // GET: api/expenses
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
-        //{
-        //    var userId = _userManager.GetUserId(HttpContext.User);
-
-        //}
         [HttpGet("Category{categoryId}")]
-        public async Task<ActionResult<IEnumerable<Expense>>> GetExpensesByCategory(int categoryId)
+        public async Task<ActionResult<IEnumerable<ExpenseGetDTO>>> GetExpensesByCategory(int categoryId)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            var expenses = _expenseRepository.GetExpensesByCategory(categoryId, userId);
-            return Ok(expenses);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
 
-            //    var userId = _userManager.GetUserId(HttpContext.User);
-
-            //    var expenses = await _context.expenses
-            //        .Where(i => i.UserId == userId)
-            //        .Where(c => c.CategoryId == categoryId)
-            //        .Select(e => new Expense
-            //        {
-            //            ExpenseId = e.ExpenseId,
-            //            Name = e.Name,
-            //            DateSpent = e.DateSpent,
-            //            Amount = e.Amount,
-            //            CategoryId = e.CategoryId
-            //        }).ToListAsync();
-            //    return expenses;
+            try
+            {
+                var expenses = _expenseRepository.GetExpensesByCategory(categoryId, userId);
+                var expenseDtos = _mapper.Map<List<ExpenseGetDTO>>(expenses);
+                return Ok(expenseDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving expenses by category.", Details = ex.Message });
+            }
         }
 
         [HttpGet("balance/user")]
-        public decimal GetBalance()
+        public ActionResult<decimal> GetBalance()
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            return _balanceService.CalculateTotalBalance(userId);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
+
+            try
+            {
+                var balance = _balanceService.CalculateTotalBalance(userId);
+                return Ok(balance);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving the balance.", Details = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Expense>> GetExpenseById(int id)
+        public async Task<ActionResult<ExpenseGetDTO>> GetExpenseById(int id)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            var expense = _mapper.Map<ExpenseGetDTO>(_expenseRepository.GetExpenseById(id, userId));
-
-            if (expense == null)
+            if (userId == null)
             {
-                return NotFound();
+                return Unauthorized(new { Message = "User not found." });
             }
 
-            return Ok(expense);
+            try
+            {
+                var expense = _expenseRepository.GetExpenseById(id, userId);
+                if (expense == null)
+                {
+                    return NotFound(new { Message = "Expense not found." });
+                }
+
+                var expenseDto = _mapper.Map<ExpenseGetDTO>(expense);
+                return Ok(expenseDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving the expense.", Details = ex.Message });
+            }
         }
 
         [HttpGet("user/")]
-        public async Task<ActionResult<Expense>> GetExpenseByUserId()
+        public async Task<ActionResult<IEnumerable<ExpenseGetDTO>>> GetExpenseByUserId()
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            var expenses = _mapper.Map<List<ExpenseGetDTO>>(_expenseRepository.GetExpenseByUserId(userId));
-            return Ok(expenses);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
+
+            try
+            {
+                var expenses = _expenseRepository.GetExpenseByUserId(userId);
+                var expenseDtos = _mapper.Map<List<ExpenseGetDTO>>(expenses);
+                return Ok(expenseDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving expenses by user.", Details = ex.Message });
+            }
         }
 
         [HttpGet("date/{date}")]
-        public async Task<ActionResult<IEnumerable<Expense>>> GetExpenseByDate(DateTime date)
+        public async Task<ActionResult<IEnumerable<ExpenseGetDTO>>> GetExpenseByDate(DateTime date)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            var expenses = _mapper.Map<List<ExpenseGetDTO>>(_expenseRepository.GetExpenseByDate(date, userId));
-            return Ok(expenses);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
+
+            try
+            {
+                var expenses = _expenseRepository.GetExpenseByDate(date, userId);
+                var expenseDtos = _mapper.Map<List<ExpenseGetDTO>>(expenses);
+                return Ok(expenseDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while retrieving expenses by date.", Details = ex.Message });
+            }
         }
 
-        // PUT: api/expenses/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutExpense(int id, ExpenseUpdateDTO expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (userId == null)
+            try
             {
-                return BadRequest("User not found");
+                var existingExpense = _expenseRepository.GetExpenseById(id, userId);
+                if (existingExpense == null)
+                {
+                    return NotFound(new { Message = "Expense not found." });
+                }
+
+                var updatedExpense = _mapper.Map(expenseDTO, existingExpense);
+                _expenseRepository.UpdateExpense(updatedExpense);
+
+                return Ok(new { Message = "Expense updated successfully.", Expense = _mapper.Map<ExpenseGetDTO>(updatedExpense) });
             }
-
-            //var expense = _expenseRepository.GetExpenseById(id, userId);
-            //var expense = await _context.expenses.FindAsync(id);
-
-
-            //_context.Entry(expense).State = EntityState.Modified;
-            var updatedExpense = _mapper.Map<ExpenseUpdateDTO>(expenseDTO);
-            _expenseRepository.PutExpense(id, expenseDTO);
-            return Ok(updatedExpense);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while updating the expense.", Details = ex.Message });
+            }
         }
-        // POST: api/expenses
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         [HttpPost]
         public async Task<ActionResult<ExpenseCreate>> PostExpense(ExpenseCreate expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not found." });
+            }
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (userId == null)
+            try
             {
-                return BadRequest("User not found.");
+                var expense = _mapper.Map<Expense>(expenseDTO);
+                _expenseRepository.CreateExpense(expense, userId);
+
+                return CreatedAtAction(nameof(GetExpenseById), new { id = expense.ExpenseId }, _mapper.Map<ExpenseGetDTO>(expense));
             }
-
-            var expense = _mapper.Map<Expense>(expenseDTO);
-            _expenseRepository.PostExpense(expense, userId);
-
-            //_context.expenses.Add(expense);
-            //await _context.SaveChangesAsync();
-
-            //var expenseDtoResult = new ExpenseCreate
-            //{
-            //    Amount = expense.Amount,
-            //    Name = expense.Name,
-            //    CategoryId = expense.CategoryId,
-            //    DateSpent = expense.DateSpent,
-            //};
-            //return CreatedAtAction("GetExpense", new { id = expense.ExpenseId }, expenseDtoResult);
-            return Ok(expenseDTO);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while creating the expense.", Details = ex.Message });
+            }
         }
 
-        // DELETE: api/Expenses/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExpense(int id)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
-            var expenseToDelete = _expenseRepository.GetExpenseById(id, userId);
-            if (!_expenseRepository.DeleteExpense(expenseToDelete))
+            if (userId == null)
             {
-                ModelState.AddModelError("", "Something went wrong");
+                return Unauthorized(new { Message = "User not found." });
             }
-            return NoContent();
-        }
 
-        private bool ExpenseExists(int id)
-        {
-            return _context.expenses.Any(e => e.ExpenseId == id);
+            try
+            {
+                var expenseToDelete = _expenseRepository.GetExpenseById(id, userId);
+                if (expenseToDelete == null)
+                {
+                    return NotFound(new { Message = "Expense not found." });
+                }
+
+                var success = _expenseRepository.DeleteExpense(expenseToDelete);
+                if (!success)
+                {
+                    return StatusCode(500, new { Message = "An error occurred while deleting the expense." });
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while deleting the expense.", Details = ex.Message });
+            }
         }
     }
 }

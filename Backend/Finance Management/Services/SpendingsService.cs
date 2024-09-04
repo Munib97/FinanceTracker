@@ -7,6 +7,7 @@ namespace Finance_Management.Services
     {
         private readonly DataContext _context;
         private readonly SubscriptionService _subscriptionService;
+
         public SpendingsService(DataContext context, SubscriptionService subscriptionService)
         {
             _context = context;
@@ -15,28 +16,48 @@ namespace Finance_Management.Services
 
         public async Task<decimal> CalculateCurrentMonthSubscriptions(string userId)
         {
-            var subscriptions = await _context.subscriptions.Where(s => s.UserId == userId).ToListAsync();
-            var dueSubscriptions = subscriptions.Where(s => s.DueDate <= DateTime.Today).ToList();
-            decimal total = 0;
-            foreach (var subscription in dueSubscriptions)
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                total += subscription.Amount;
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
             }
+
+            var today = DateTime.Today;
+            decimal total = await _context.subscriptions
+                .Where(s => s.UserId == userId && s.DueDate <= today)
+                .SumAsync(s => s.Amount);
+
             return total;
         }
 
         public async Task<decimal> CalculateCurrentMonthExpenses(string userId)
         {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
             var now = DateTime.Now;
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
             var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-            decimal currentMonthExpenses = await _context.expenses.Where(i => i.UserId == userId && i.DateSpent >= startOfMonth && i.DateSpent <= endOfMonth).SumAsync(i => i.Amount);
+
+            decimal currentMonthExpenses = await _context.expenses
+                .Where(e => e.UserId == userId && e.DateSpent >= startOfMonth && e.DateSpent <= endOfMonth)
+                .SumAsync(e => e.Amount);
+
             return currentMonthExpenses;
         }
 
         public async Task<decimal> CalculateCurrentMonthSpending(string userId)
         {
-            return await CalculateCurrentMonthExpenses(userId) + await CalculateCurrentMonthSubscriptions(userId);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
+            var expenses = await CalculateCurrentMonthExpenses(userId);
+            var subscriptions = await CalculateCurrentMonthSubscriptions(userId);
+
+            return expenses + subscriptions;
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using Finance_Management.Data;
-using Finance_Management.Models;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Finance_Management.Services
 {
@@ -12,23 +10,42 @@ namespace Finance_Management.Services
         {
             _context = context;
         }
-    
+
         public decimal CalculateTotalBalance(string userId)
         {
-            decimal totalBalance = CalculateTotalIncome(userId) - CalculateTotalExpenses(userId);
-            return totalBalance;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
+            var totalIncome = CalculateTotalIncome(userId);
+            var totalExpenses = CalculateTotalExpenses(userId);
+
+            return totalIncome - totalExpenses;
         }
 
-        public decimal CalculateTotalIncome(string userId) 
+        public decimal CalculateTotalIncome(string userId)
         {
-            decimal totalIncome = _context.incomes.Where(i => i.UserId == userId).Sum(i => i.Amount);
-            return totalIncome;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
+            return _context.incomes
+                           .Where(i => i.UserId == userId)
+                           .Sum(i => i.Amount);
         }
 
-        public decimal CalculateTotalExpenses(string userId) 
+        public decimal CalculateTotalExpenses(string userId)
         {
-            decimal totalExpenses = _context.expenses.Where(i => i.UserId == userId).Sum(i => i.Amount);
-            return totalExpenses;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
+            return _context.expenses
+                           .Where(e => e.UserId == userId)
+                           .Sum(e => e.Amount);
         }
     }
 }

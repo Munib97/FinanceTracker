@@ -1,93 +1,128 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity } from 'react-native'
-import { FlatList } from 'react-native-gesture-handler'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
+import { Card } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
-
-
-
 
 export default function Subscriptions()
 {
-
-    const [subscriptions, setSubscriptions] = useState([])
-
-
+    const [subscriptions, setSubscriptions] = useState([]);
+    const navigation = useNavigation();
 
     useEffect(() =>
     {
-        fetchSubscriptions()
-    }, [])
-
+        fetchSubscriptions();
+    }, []);
 
     const fetchSubscriptions = async () =>
     {
         try
         {
-            const token = await AsyncStorage.getItem('token')
+            const token = await AsyncStorage.getItem('token');
             const response = await axios.get(`http://192.168.0.117:5295/api/Subscriptions/user/`, {
                 headers: {
-                    Authorization: `Bearer ${ token }`
-                }
-            })
-            setSubscriptions(response.data)
+                    Authorization: `Bearer ${ token }`,
+                },
+            });
+            setSubscriptions(response.data);
         } catch (error)
         {
-            console.error("Failed fetching subscriptions: ", error)
+            console.error('Failed fetching subscriptions: ', error);
         }
+    };
 
-    }
+    const handleRowPress = (item) =>
+    {
+        Alert.alert("Subscription Details", `Name: ${ item.name }\nAmount: €${ item.amount }\nNext Billing Date: ${ item.nextBillingDate }`);
+    };
 
+    const renderItem = ({ item }) => (
+        <TouchableOpacity onPress={ () => handleRowPress(item) }>
+            <Card containerStyle={ styles.card }>
+                <View style={ styles.cardRow }>
+                    <Text style={ styles.subscriptionName }>{ item.name }</Text>
+                    <Text style={ styles.subscriptionAmount }>€{ item.amount }</Text>
+                </View>
+            </Card>
+        </TouchableOpacity>
+    );
 
-    const navigation = useNavigation()
+    const renderHeader = () => (
+        <TouchableOpacity style={ styles.addButton } onPress={ () => navigation.navigate('AddSubscription') }>
+            <Text style={ styles.addButtonText }>+ Add New Subscription</Text>
+        </TouchableOpacity>
+    );
+
     return (
-        <View>
+        <View style={ styles.container }>
+            <View style={ styles.header }>
+                <Text style={ styles.headerTitle }>Subscriptions</Text>
+            </View>
             <FlatList
-                style={ styles.list }
                 data={ subscriptions }
-                renderItem={ ({ item }) => (
-                    <View style={ styles.item }>
-                        <Text>{ item.name }</Text>
-
-                        <Text>{ item.amount }</Text>
-
-                    </View>
-                )
-                }
+                renderItem={ renderItem }
+                keyExtractor={ (item) => item.id || item.name }
+                contentContainerStyle={ styles.listContainer }
+                ListHeaderComponent={ renderHeader }
             />
-            <TouchableOpacity
-                style={ styles.addButton }
-                onPress={ () =>
-                {
-                    navigation.navigate('AddSubscription')
-                } }
-            >
-                <Text style={ { color: 'white', fontSize: 24 } }>+</Text>
-            </TouchableOpacity>
         </View>
-    )
+    );
 }
 
-const styles = {
-    list: {
-        backgroundColor: 'lightgrey',
-        height: '100%',
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#ffffff',
+        padding: 10,
     },
-    item: {
-        borderWidth: 1,
-        margin: 1,
-        backgroundColor: 'grey',
+    header: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1E90FF',
+    },
+    listContainer: {
+        paddingBottom: 20,
+    },
+    card: {
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    cardRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    subscriptionName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333333',
+    },
+    subscriptionAmount: {
+        fontSize: 14,
+        color: '#333333',
     },
     addButton: {
-        position: 'absolute',
-        bottom: 5,
-        right: 172,
-        backgroundColor: 'blue',
-        width: 60,
-        height: 50,
-        borderRadius: 30,
+        backgroundColor: '#1E90FF',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
         justifyContent: 'center',
         alignItems: 'center',
-    }
-}
+    },
+    addButtonText: {
+        fontSize: 16,
+        color: 'white',
+        fontWeight: 'bold',
+    },
+});

@@ -10,7 +10,7 @@ namespace Finance_Management.Data
         public DateTime? EndDate { get; set; }
         public decimal? Amount { get; set; }
         public int? CategoryId { get; set; }
-        public DateTime? Date { get; set; }
+        public DateTime? DueDate { get; set; }
         public string CategoryName { get; set; }
         public string Type { get; set; }
     }

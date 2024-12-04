@@ -14,6 +14,7 @@ namespace Finance_Management.Data
         [Required]
         public DateTime? EndDate { get; set; }
         [Required]
+        public DateTime? DueDate { get; set; }
         public decimal? Amount { get; set; }
         [Required]
         public int? CategoryId { get; set; }

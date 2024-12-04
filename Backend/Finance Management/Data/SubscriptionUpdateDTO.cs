@@ -10,6 +10,7 @@ namespace Finance_Management.Data
         SubscriptionFrequency? Frequency,
         DateTime? StartDate,
         DateTime? EndDate,
+        DateTime? DueDate,
         int? CategoryId
      );
 }

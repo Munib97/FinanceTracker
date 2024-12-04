@@ -31,27 +31,6 @@ namespace Finance_Management.Models
         public int CategoryId { get; set; }
         public virtual Category Category { get; set; }
 
-        public DateTime DueDate
-        {
-            get
-            {
-                switch (Frequency)
-                {
-                    case SubscriptionFrequency.Weekly:
-                        return StartDate.AddDays(7);
-                    case SubscriptionFrequency.Monthly:
-                        return StartDate.AddMonths(1);
-                    case SubscriptionFrequency.Quarterly:
-                        return StartDate.AddMonths(3);
-                    case SubscriptionFrequency.Biannually:
-                        return StartDate.AddMonths(6);
-                    case SubscriptionFrequency.Yearly:
-                        return StartDate.AddYears(1);
-                    default:
-                        throw new ArgumentOutOfRangeException("Frequency");
-
-                }
-            }
-        }
+        public DateTime DueDate { get; set; }
     }
 }

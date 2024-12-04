@@ -61,7 +61,6 @@ namespace Finance_Management.Controllers
                     return NotFound(new { Message = "Subscription not found." });
                 }
 
-                // Apply changes only if new values are provided
                 if (subscriptionsDTO.Frequency.HasValue)
                 {
                     existingSubscription.Frequency = subscriptionsDTO.Frequency.Value;

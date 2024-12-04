@@ -536,3 +536,7 @@ C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\
 C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\obj\Debug\net8.0\Finance Management.genruntimeconfig.cache
 C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\obj\Debug\net8.0\ref\Finance Management.dll
 C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\bin\Debug\net8.0\Hangfire.AspNetCore.dll
+C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\bin\Debug\net8.0\Hangfire.Core.dll
+C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\bin\Debug\net8.0\Hangfire.NetCore.dll
+C:\Users\Munib\Desktop\FinanceTracker\FinanceTracker\Backend\Finance Management\bin\Debug\net8.0\Hangfire.SqlServer.dll

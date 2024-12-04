@@ -150,6 +150,8 @@ namespace Finance_Management.Controllers
         public async Task<IActionResult> PutExpense(int id, ExpenseUpdateDTO expenseDTO)
         {
             var userId = _userManager.GetUserId(HttpContext.User);
+
+            return Ok();
             if (userId == null)
             {
                 return Unauthorized(new { Message = "User not found." });
@@ -159,24 +161,24 @@ namespace Finance_Management.Controllers
             {
                 return BadRequest(ModelState);
             }
+            _expenseRepository.PutExpense(id, expenseDTO);
+            //try
+            //{
+            //    var existingExpense = _expenseRepository.GetExpenseById(id, userId);
+            //    if (existingExpense == null)
+            //    {
+            //        return NotFound(new { Message = "Expense not found." });
+            //    }
 
-            try
-            {
-                var existingExpense = _expenseRepository.GetExpenseById(id, userId);
-                if (existingExpense == null)
-                {
-                    return NotFound(new { Message = "Expense not found." });
-                }
+            //    var updatedExpense = _mapper.Map(expenseDTO, existingExpense);
+            //    _expenseRepository.PutExpense(id, updatedExpense);
 
-                var updatedExpense = _mapper.Map(expenseDTO, existingExpense);
-                _expenseRepository.UpdateExpense(updatedExpense);
-
-                return Ok(new { Message = "Expense updated successfully.", Expense = _mapper.Map<ExpenseGetDTO>(updatedExpense) });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "An error occurred while updating the expense.", Details = ex.Message });
-            }
+            //    return Ok(new { Message = "Expense updated successfully.", Expense = _mapper.Map<ExpenseGetDTO>(updatedExpense) });
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, new { Message = "An error occurred while updating the expense.", Details = ex.Message });
+            //}
         }
 
         [HttpPost]
@@ -196,7 +198,7 @@ namespace Finance_Management.Controllers
             try
             {
                 var expense = _mapper.Map<Expense>(expenseDTO);
-                _expenseRepository.CreateExpense(expense, userId);
+                _expenseRepository.PostExpense(expense, userId);
 
                 return CreatedAtAction(nameof(GetExpenseById), new { id = expense.ExpenseId }, _mapper.Map<ExpenseGetDTO>(expense));
             }

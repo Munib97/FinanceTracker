@@ -1,145 +1,81 @@
-// <<<<<<< HEAD
-// import React, { useState, useEffect, useContext } from "react";
-// import Swiper from "react-native-screens-swiper";
-// import { Platform } from "react-native";
-// import { View, Text, Button } from "react-native";
-// import Expenses from "./epxenses";
-// import Home from "./home";
-// import Subscriptions from "./subscriptions";
-// import { AuthContext } from "../authContext";
-
-// =======
-import React, { useState, useEffect, useRef } from 'react';
-import
-{
-    View,
-    TouchableOpacity,
-    StyleSheet,
-    Text,
-    Platform,
-    Dimensions,
-    ScrollView,
-    Image,
-} from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ExpensesIcon from '../icons/ExpensesIcon.png';
-import HomeIcon from '../icons/HomeIcon.png';
-import SubscriptionsIcon from '../icons/SubscriptionsIcon.png';
+import React, { useContext } from 'react';
+import { View, Button, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import Expenses from './expenses';
 import Home from './home';
 import Subscriptions from './subscriptions';
-//>>>>>>> eb29f75b4d41b6727178dcf965a112cc4c60b400
+import ExpensesIcon from '../icons/ExpensesIcon.png';
+import HomeIcon from '../icons/HomeIcon.png';
+import SubscriptionsIcon from '../icons/SubscriptionsIcon.png';
+import MenuIcon from '../icons/MenuIcon.png';
 
-const tabIcons = {
-    E: ExpensesIcon,
-    H: HomeIcon,
-    S: SubscriptionsIcon,
-};
+const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 
-const tabColors = {
-    inactive: Platform.OS === 'android' ? 'lightgrey' : 'darkgrey',
-    active: 'darkgrey',
-};
 
-const screenWidth = Dimensions.get('window').width;
-
-export default function Dashboard()
+const Dashboard = ({ navigation }) =>
 {
-    const [activeIndex, setActiveIndex] = useState(0);
-    const scrollViewRef = useRef(null);
-
-    const handleTabPress = (index) =>
-    {
-        setActiveIndex(index);
-        scrollToIndex(index);
-    };
-
-    const scrollToIndex = (index) =>
-    {
-        if (scrollViewRef.current)
-        {
-            scrollViewRef.current.scrollTo({
-                x: screenWidth * index,
-                animated: true,
-            });
-        }
-    };
-
-    const onScroll = (event) =>
-    {
-        const contentOffsetX = event.nativeEvent.contentOffset.x;
-        const index = Math.round(contentOffsetX / screenWidth);
-        if (index !== activeIndex)
-        {
-            setActiveIndex(index);
-        }
-    };
-
-    const data = [
-        { tabLabel: 'E', component: Expenses },
-        { tabLabel: 'H', component: Home },
-        { tabLabel: 'S', component: Subscriptions },
-    ];
-
-    const renderTab = (tabData, index) => (
-        <TouchableOpacity
-            key={ index }
-            style={ [styles.tabButton, index === activeIndex && styles.activeTabButton] }
-            onPress={ () => handleTabPress(index) }>
-            <Image
-                source={ tabIcons[tabData.tabLabel] }
-                style={ [styles.tabIcon, index === activeIndex && styles.activeIcon] }
-                resizeMode="contain"
-            />
-        </TouchableOpacity>
-    );
-
     return (
-        <GestureHandlerRootView style={ styles.container }>
-            <ScrollView
-                ref={ scrollViewRef }
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={ false }
-                contentContainerStyle={ { width: screenWidth * data.length } }
-                scrollEventThrottle={ 16 }
-                onScroll={ onScroll }>
-                { data.map((tab, index) => (
-                    <View key={ index } style={ { width: screenWidth, paddingHorizontal: 10 } }>
-                        <tab.component />
-                    </View>
-                )) }
-            </ScrollView>
-            <View style={ styles.bottomTabsContainer }>
-                { data.map((tabData, index) => renderTab(tabData, index)) }
-            </View>
-        </GestureHandlerRootView>
+        <SafeAreaView style={ { flex: 1 } }>
+            <Tab.Navigator
+                screenOptions={ ({ route }) => ({
+                    tabBarIcon: ({ focused, color, size }) =>
+                    {
+                        let iconSource;
+                        if (route.name === 'Expenses')
+                        {
+                            iconSource = ExpensesIcon;
+                        } else if (route.name === 'Home')
+                        {
+                            iconSource = HomeIcon;
+                        } else if (route.name === 'Subscriptions')
+                        {
+                            iconSource = SubscriptionsIcon;
+                        }
+                        return (
+                            <Image
+                                source={ iconSource }
+                                style={ [styles.tabIcon, { tintColor: color }] }
+                                resizeMode="contain"
+                            />
+                        );
+                    },
+                    tabBarActiveTintColor: 'darkgrey',
+                    tabBarInactiveTintColor: 'lightgrey',
+                }) }
+            >
+                <Tab.Screen name="Expenses" component={ Expenses } />
+                <Tab.Screen name="Home" component={ Home } />
+                <Tab.Screen name="Subscriptions" component={ Subscriptions } />
+            </Tab.Navigator>
+
+
+            <TouchableOpacity
+                style={ styles.hamburgerButton }
+                onPress={ () => navigation.toggleDrawer() }
+            >
+                <Image
+                    source={ MenuIcon }
+                    style={ { width: 30, height: 30 } }
+                />
+            </TouchableOpacity>
+        </SafeAreaView>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    bottomTabsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: tabColors.inactive,
-        height: 50,
-    },
-    tabButton: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    activeTabButton: {
-        backgroundColor: tabColors.active,
-    },
     tabIcon: {
         width: 30,
         height: 30,
     },
-    activeIcon: {
-        tintColor: 'red',
+    hamburgerButton: {
+        position: 'absolute',
+        top: 40,
+        right: 10,
+        zIndex: 1,
+        padding: 10,
     },
 });
+
+export default Dashboard;

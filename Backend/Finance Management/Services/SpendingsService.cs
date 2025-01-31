@@ -14,50 +14,94 @@ namespace Finance_Management.Services
             _subscriptionService = subscriptionService;
         }
 
-        public async Task<decimal> CalculateCurrentMonthSubscriptions(string userId)
+        public async Task<decimal> CalculateCurrentMonthSubscriptions(string userId, DateTime? startDate = null, DateTime? endDate = null)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
                 throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
             }
 
-            var today = DateTime.Today;
-            decimal total = await _context.subscriptions
-                .Where(s => s.UserId == userId && s.DueDate <= today)
-                .SumAsync(s => s.Amount);
+            var query = _context.subscriptions.AsQueryable();
 
-            return total;
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                query = query.Where(s => s.UserId == userId && s.DueDate >= startDate && s.DueDate <= endDate);
+            }
+            else
+            {
+                var today = DateTime.Today;
+                query = query.Where(s => s.UserId == userId && s.DueDate <= today);
+            }
+
+            return await query.SumAsync(s => s.Amount);
         }
 
-        public async Task<decimal> CalculateCurrentMonthExpenses(string userId)
+
+        public async Task<decimal> CalculateCurrentMonthExpenses(string userId, DateTime? startDate = null, DateTime? endDate = null, string? category = null)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
                 throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
             }
 
-            var now = DateTime.Now;
-            var startOfMonth = new DateTime(now.Year, now.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            var query = _context.expenses.AsQueryable();
 
-            decimal currentMonthExpenses = await _context.expenses
-                .Where(e => e.UserId == userId && e.DateSpent >= startOfMonth && e.DateSpent <= endOfMonth)
-                .SumAsync(e => e.Amount);
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                query = query.Where(e => e.UserId == userId && e.DateSpent >= startDate && e.DateSpent <= endDate && e.Category.Name == category);
+            }
+            else
+            {
+                var now = DateTime.Now;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                query = query.Where(e => e.UserId == userId && e.DateSpent >= startOfMonth && e.DateSpent <= endOfMonth);
+            }
 
-            return currentMonthExpenses;
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(e => e.Category.Name == category);
+            }
+
+            return await query.SumAsync(e => e.Amount);
         }
 
-        public async Task<decimal> CalculateCurrentMonthSpending(string userId)
+        public async Task<decimal> CalculateCurrentMonthSpending(string userId, DateTime? startDate = null, DateTime? endDate = null, string? category = null)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
                 throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
             }
 
-            var expenses = await CalculateCurrentMonthExpenses(userId);
-            var subscriptions = await CalculateCurrentMonthSubscriptions(userId);
+            var expenses = await CalculateCurrentMonthExpenses(userId, startDate, endDate, category);
+            var subscriptions = await CalculateCurrentMonthSubscriptions(userId, startDate, endDate);
 
             return expenses + subscriptions;
         }
+
+        public async Task<List<CategorySpending>> GetSpendingByCategory(string userId, DateTime startDate, DateTime endDate)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+            }
+
+            return await _context.expenses
+                .Where(e => e.UserId == userId && e.DateSpent >= startDate && e.DateSpent <= endDate)
+                .GroupBy(e => e.Category.Name)
+                .Select(g => new CategorySpending
+                {
+                    Category = g.Key,
+                    TotalAmount = g.Sum(e => e.Amount)
+                })
+                .ToListAsync();
+        }
+    }
+
+
+    public class CategorySpending
+    {
+        public string? Category { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 }

@@ -48,6 +48,23 @@ namespace Finance_Management.Controllers
             }
         }
 
+        [HttpGet("{categoryName}")]
+        public async Task<ActionResult<Subscription>> GetSubscriptionsByCategory(string categoryName)
+        {
+            var userId = _userManager.GetUserId(HttpContext.User);
+            var subs = await _context.subscriptions.Where(s => s.Category.Name == categoryName && s.UserId == userId).ToListAsync();
+            return Ok(subs);
+        }
+
+        [HttpGet("GetSubscriptionByDate")]
+        public async Task<ActionResult<Subscription>> GetSubscriptionsByDate(DateTime startingDate, DateTime endingDate)
+        {
+            var userId = _userManager.GetUserId(HttpContext.User);
+            var subs = await _context.subscriptions.Where(s => s.DueDate > startingDate && s.DueDate < endingDate).ToListAsync();
+            return Ok(subs);
+        }
+
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubscription(int id, SubscriptionUpdateDTO subscriptionsDTO)
         {

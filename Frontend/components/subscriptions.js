@@ -21,7 +21,7 @@ export default function Subscriptions()
         try
         {
             const token = await AsyncStorage.getItem('token');
-            const response = await axios.get(`http://192.168.0.117:5295/api/Subscriptions/user/`, {
+            const response = await axios.get(`http://192.168.0.2:5295/api/Subscriptions/user/`, {
                 headers: {
                     Authorization: `Bearer ${ token }`,
                 },

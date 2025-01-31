@@ -25,7 +25,7 @@ export default function Expenses()
                 return;
             }
 
-            const response = await axios.get(`http://192.168.0.117:5295/api/Expenses/user/`, {
+            const response = await axios.get(`http://192.168.0.2:5295/api/Expenses/user/`, {
                 headers: {
                     Authorization: `Bearer ${ token }`,
                 },
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         borderRadius: 10,
         padding: 15,
-        marginBottom: 10,
+        marginBottom: -3,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

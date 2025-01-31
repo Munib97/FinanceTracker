@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) =>
     {
         try
         {
-            const response = await axios.post(`http://192.168.0.117:5295/api/auth/login`, {
+            const response = await axios.post(`http://192.168.0.2:5295/api/auth/login`, {
                 username,
                 password
             }, {
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) =>
     {
         try
         {
-            const response = await axios.get(`http://192.168.0.117:5295/api/auth/validateToken`, {
+            const response = await axios.get(`http://192.168.0.2:5295/api/auth/validateToken`, {
                 headers: {
                     'Authorization': `Bearer ${ storedToken }`
                 }

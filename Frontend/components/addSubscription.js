@@ -4,7 +4,6 @@ import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Dropdown } from 'react-native-element-dropdown';
-import { sub } from 'date-fns';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddSubscription()
@@ -50,7 +49,7 @@ export default function AddSubscription()
         {
             const token = await AsyncStorage.getItem('token');
             setToken(token)
-            const response = await axios.get('http://192.168.0.117:5295/api/Categories', {
+            const response = await axios.get('http://192.168.0.2:5295/api/Categories', {
                 headers: {
                     Authorization: `Bearer ${ token }`
                 }

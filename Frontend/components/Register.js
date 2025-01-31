@@ -24,7 +24,7 @@ export default function Register()
         }
         try
         {
-            const response = await axios.post(`http://192.168.0.117:5295/api/auth/register`, {
+            const response = await axios.post(`http://192.168.0.2:5295/api/auth/register`, {
                 username,
                 password,
                 email,
